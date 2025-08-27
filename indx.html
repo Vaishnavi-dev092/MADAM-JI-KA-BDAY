@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Digital Friendship Jar</title>
+  <style>
+    :root {
+      --jar-w: 280px;
+      --jar-h: 380px;
+      --glass-tint: 230, 220, 250;
+      --glass-alpha: 0.15;
+      --edge-alpha: 0.5;
+      --cap-color: #d6c8e4;
+    }
+
+    * { 
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+      background: #000000;
+      color: #d6c8e4;
+      overflow: hidden;
+      position: relative;
+      padding: 20px;
+    }
+
+    .title {
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+      text-shadow: 0 0 15px rgba(214, 200, 228, 0.7);
+      color: #e6e6fa;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-align: center;
+      z-index: 10;
+      padding: 0 10px;
+    }
+
+    .stage { 
+      position: relative; 
+      width: 100%;
+      max-width: 400px;
+      height: 65vh;
+      max-height: 600px;
+      display: grid;
+      place-items: center;
+    }
+
+    .table-shadow { 
+      position: absolute; 
+      inset: auto 0 30px; 
+      height: 18px; 
+      filter: blur(10px); 
+      opacity: 0.4; 
+      background: radial-gradient(60% 100% at 50% 50%, rgba(138, 43, 226, 0.5), transparent 70%); 
+    }
+
+    /* Jar wrapper */
+    .jar { 
+      position: relative; 
+      width: var(--jar-w); 
+      height: var(--jar-h); 
+      z-index: 5;
+    }
+
+    /* CAP */
+    .cap {
+      position: absolute; 
+      left: 50%; 
+      transform: translateX(-50%);
+      top: -30px; 
+      width: calc(var(--jar-w) * 0.84); 
+      height: 35px;
+      background: linear-gradient(to bottom, #6b4b8a, #3a2c58);
+      border-radius: 10px 10px 12px 12px / 10px 10px 16px 16px;
+      box-shadow:
+        inset 0 2px 6px rgba(255, 255, 255, 0.25),
+        inset 0 -6px 14px rgba(0, 0, 0, 0.6),
+        0 8px 18px rgba(0, 0, 0, 0.3);
+      z-index: 10;
+    }
+    
+    /* cap rim lip */
+    .cap::after {
+      content: ""; 
+      position: absolute; 
+      inset: auto 6% -7px 6%; 
+      height: 18px; 
+      border-radius: 0 0 10px 10px;
+      background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 60%);
+      filter: blur(0.5px);
+    }
+
+    /* NECK + THREADS */
+    .neck {
+      position: absolute; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      top: 0; 
+      width: calc(var(--jar-w) * 0.84); 
+      height: 32px;
+      border-radius: 10px; 
+      background: rgba(var(--glass-tint), 0.1);
+      outline: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 
+        inset 0 0 0 1px rgba(0, 0, 0, 0.1), 
+        inset 0 8px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      z-index: 8;
+    }
+    
+    .neck::before, .neck::after {
+      content: ""; 
+      position: absolute; 
+      inset: 0; 
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.4) 0 2px,
+        rgba(255, 255, 255, 0) 2px 6px
+      );
+      opacity: 0.7;
+    }
+    
+    .neck::after { 
+      filter: blur(1px); 
+      opacity: 0.4; 
+    }
+
+    /* BODY */
+    .body {
+      position: absolute; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      top: 22px;
+      width: var(--jar-w); 
+      height: calc(var(--jar-h) - 22px);
+      border-radius: 30px / 42px;
+      background:
+        radial-gradient(120% 120% at 50% -10%, rgba(255,255,255,.85), transparent 55%),
+        linear-gradient( to right, rgba(255,255,255,.9), rgba(255,255,255,0) 18%, rgba(255,255,255,0) 82%, rgba(255,255,255,.9) ),
+        rgba(var(--glass-tint), var(--glass-alpha));
+      box-shadow:
+        inset 0 0 0 1px rgba(0,0,0,.05),
+        inset 0 0 32px rgba(0,0,0,.06),
+        0 18px 40px rgba(0,0,0,.12);
+      overflow: hidden;
+      z-index: 6;
+    }
+
+    /* vertical edge highlights */
+    .body::before,
+    .body::after {
+      content: ""; 
+      position: absolute; 
+      top: 0; 
+      bottom: 0; 
+      width: 15px;
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,0) 25%, rgba(255,255,255,0) 75%, rgba(255,255,255,.75));
+      opacity: var(--edge-alpha);
+      filter: blur(.2px);
+    }
+    
+    .body::before { left: 8px; }
+    .body::after { right: 8px; }
+
+    /* BASE thickness/meniscus */
+    .base {
+      position: absolute; 
+      left: 50%; 
+      transform: translateX(-50%);
+      bottom: -10px; 
+      width: calc(var(--jar-w) * 0.9); 
+      height: 22px;
+      border-radius: 0 0 50% 50% / 0 0 100% 100%;
+      background: radial-gradient(120% 120% at 50% 0, rgba(0,0,0,.08), rgba(0,0,0,0) 60%);
+      box-shadow: inset 0 6px 10px rgba(0,0,0,.12);
+      pointer-events: none;
+      z-index: 7;
+    }
+
+    /* Notes container */
+    .notes-container {
+      position: absolute;
+      width: 85%;
+      height: 80%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: repeat(9, 1fr);
+      gap: 6px;
+      padding: 12px;
+    }
+
+    .note {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      z-index: 10;
+      overflow: hidden;
+      border-radius: 6px;
+      box-shadow: 0 0 8px rgba(138, 43, 226, 0.5);
+      background: linear-gradient(135deg, var(--note-color-1), var(--note-color-2));
+      touch-action: manipulation;
+    }
+
+    .note:hover, .note:active {
+      transform: scale(1.05);
+      box-shadow: 0 0 12px rgba(138, 43, 226, 0.8);
+    }
+
+    .note:before {
+      content: '💌';
+      font-size: 1.3rem;
+      filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
+    }
+
+    .note-content {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 85%;
+      max-width: 320px;
+      min-height: 200px;
+      background: linear-gradient(135deg, #f8f4ff, #f0e9ff);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 30px rgba(177, 156, 217, 0.8);
+      z-index: 20;
+      color: #7b5ea6;
+      font-size: 1rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #d6c8e4;
+    }
+
+    .note-content h3 {
+      margin-bottom: 12px;
+      font-size: 1.3rem;
+      color: #9f89bc;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 1.6rem;
+      cursor: pointer;
+      color: #9f89bc;
+      transition: transform 0.3s;
+      padding: 5px;
+    }
+
+    .close-btn:hover, .close-btn:active {
+      transform: scale(1.2);
+    }
+
+    .hearts {
+      font-size: 1.6rem;
+      margin-top: 12px;
+      color: #e3b0d2;
+      letter-spacing: 4px;
+    }
+
+    .floating-items {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .floating-item {
+      position: absolute;
+      font-size: 1.8rem;
+      opacity: 0.7;
+      animation: float-around 15s infinite linear;
+      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+    }
+
+    .stars {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 5s infinite;
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.8);
+      animation: sparkle 2s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes float-around {
+      0% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      25% {
+        transform: translate(40px, 80px) rotate(90deg);
+      }
+      50% {
+        transform: translate(80px, 40px) rotate(180deg);
+      }
+      75% {
+        transform: translate(15px, 100px) rotate(270deg);
+      }
+      100% {
+        transform: translate(0, 0) rotate(360deg);
+      }
+    }
+
+    @keyframes twinkle {
+      0%, 100% {
+        opacity: 0.2;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    /* Mobile-specific adjustments */
+    @media (max-width: 480px) {
+      :root {
+        --jar-w: 250px;
+        --jar-h: 340px;
+      }
+      
+      .title {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+      }
+      
+      .stage {
+        height: 55vh;
+      }
+      
+      .notes-container {
+        gap: 5px;
+        padding: 10px;
+      }
+      
+      .note:before {
+        font-size: 1.1rem;
+      }
+      
+      .floating-item {
+        font-size: 1.5rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      :root {
+        --jar-w: 220px;
+        --jar-h: 300px;
+      }
+      
+      .title {
+        font-size: 1.6rem;
+      }
+      
+      .notes-container {
+        gap: 4px;
+      }
+    }
+
+    /* Prevent zoom on input focus */
+    @media (max-width: 480px) {
+      .note-content {
+        font-size: 16px; /* Prevents zoom on iOS */
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="title">Tiny Pieces of Us</h1>
+  
+  <div class="stage">
+    <div class="stars" id="stars"></div>
+    
+    <div class="jar">
+      <div class="cap"></div>
+      <div class="neck"></div>
+      <div class="body">
+        <div class="notes-container" id="notes-container">
+          <!-- Notes will be generated by JavaScript -->
+        </div>
+      </div>
+      <div class="base"></div>
+    </div>
+    
+    <div class="table-shadow"></div>
+  </div>
+  
+  <div class="floating-items">
+    <div class="floating-item" style="top: 10%; left: 20%;">🧸</div>
+    <div class="floating-item" style="top: 20%; left: 80%;">🏐</div>
+    <div class="floating-item" style="top: 70%; left: 10%;">💖</div>
+    <div class="floating-item" style="top: 60%; left: 70%;">🧸</div>
+    <div class="floating-item" style="top: 30%; left: 40%;">🏐</div>
+    <div class="floating-item" style="top: 80%; left: 90%;">💕</div>
+    <div class="floating-item" style="top: 15%; left: 70%;">🌟</div>
+  </div>
+
+  <script>
+    // Create stars
+    const starsContainer = document.getElementById('stars');
+    for (let i = 0; i < 150; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = Math.random() * 3;
+      star.style.width = size + 'px';
+      star.style.height = size + 'px';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.top = Math.random() * 100 + '%';
+      star.style.animationDelay = Math.random() * 5 + 's';
+      starsContainer.appendChild(star);
+    }
+    
+    // Pastel purple color combinations for notes
+    const pastelPurpleColors = [
+      { color1: '#e6e6fa', color2: '#d8d4f2' }, // Lavender
+      { color1: '#d8bfd8', color2: '#d2cad2' }, // Thistle
+      { color1: '#dda0dd', color2: '#d491d4' }, // Plum
+      { color1: '#e6e6fa', color2: '#dcd0ff' }, // Lavender 2
+      { color1: '#c9a0dc', color2: '#c095d2' }, // Wisteria
+      { color1: '#f0e6ff', color2: '#e6d6ff' }, // Light purple
+      { color1: '#e0b0ff', color2: '#d6a1f7' }, // Mauve
+      { color1: '#c3b1e1', color2: '#b9a7d7' }, // Light pastel purple
+      { color1: '#c4aead', color2: '#baa3a2' }, // Silver pink
+      { color1: '#b19cd9', color2: '#a78ecf' }, // Light purple 2
+      { color1: '#a890f0', color2: '#9e82e6' }, // Light indigo
+      { color1: '#b667c1', color2: '#ac5db7' }, // Rich lavender
+      { color1: '#d6c8e4', color2: '#ccbeda' }, // Light lavender
+      { color1: '#e3d9f2', color2: '#d9cfe8' }, // Pale lavender
+      { color1: '#c8a2c8', color2: '#be98be' }, // Lilac
+      { color1: '#beaed4', color2: '#b4a4ca' }, // Light pastel purple 2
+      { color1: '#f2d0e7', color2: '#e8c6dd' }, // Pale pink-purple
+      { color1: '#e9d4ff', color2: '#dfcaf5' }  // Very pale purple
+    ];
+    
+    // Notes data
+    const notes = [
+      { content: "Hey Mrs. Purple Shirt 💘" },
+      { content: "Best volleyball captain ever! 🏐" },
+      { content: "Once a suar always a suar 🐷" },
+      { content: "My one and only sister from another mother 👯‍♀️" },
+      { content: "Bestie, remember the time we laughed so much people thought we were possessed? 😂" },
+      { content: "You are the Wi-Fi of my life… without you, I'd be totally disconnected. 📶" },
+      { content: "If we ever get caught doing something stupid, remember: you're the mastermind and I'm just innocent support. 😇" },
+      { content: "You're proof that God has a sense of humour—because he made us friends. 😄" },
+      { content: "Whenever life feels heavy, I remind myself—I have you. 💪" },
+      { content: "Best friends aren't measured in years, but in moments… and you're my favourite moment every single day. ⭐" },
+      { content: "If I could gift you the world, it would still be smaller than what you mean to me. 🌎" },
+      { content: "You've been my safe place, my chaos partner, and my biggest cheerleader. 🎉" },
+      { content: "Bestie, you're my 'chosen family.' 👨‍👩‍👧‍👦" },
+      { content: "Warning: Hanging out with me may cause permanent laughter wrinkles. 😂" },
+      { content: "You owe me food… and I'll never forget it. 🍕" },
+      { content: "If friendship had a syllabus, we would've failed in 'seriousness' but topped in 'mastiiiiii.' 📚" },
+      { content: "If we ever get famous, let's tell everyone our friendship started because of snacks. 🍿" },
+      { content: "We're basically like a software update—annoying sometimes, but you can't live without us. 💻" }
+    ];
+    
+    const notesContainer = document.getElementById('notes-container');
+    const body = document.querySelector('.body');
+    
+    // Create notes and add to jar in a 9x2 grid
+    notes.forEach((note, index) => {
+      const noteEl = document.createElement('div');
+      noteEl.className = 'note';
+      
+      // Assign pastel purple colors
+      const colors = pastelPurpleColors[index];
+      noteEl.style.setProperty('--note-color-1', colors.color1);
+      noteEl.style.setProperty('--note-color-2', colors.color2);
+      
+      // Create note content element
+      const noteContent = document.createElement('div');
+      noteContent.className = 'note-content';
+      noteContent.style.display = 'none';
+      noteContent.innerHTML = `
+        <span class="close-btn">&times;</span>
+        <h3>Memory 💖</h3>
+        <p>${note.content}</p>
+        <div class="hearts">💖🤗💕👯‍♀️✨</div>
+      `;
+      
+      // Add event listeners
+      noteEl.addEventListener('click', () => {
+        noteContent.style.display = 'flex';
+      });
+      
+      // Also support touch events for mobile
+      noteEl.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        noteEl.style.transform = 'scale(1.05)';
+        noteEl.style.boxShadow = '0 0 12px rgba(138, 43, 226, 0.8)';
+      });
+      
+      noteEl.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        noteContent.style.display = 'flex';
+      });
+      
+      noteContent.querySelector('.close-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        noteContent.style.display = 'none';
+      });
+      
+      // Also support touch for closing on mobile
+      noteContent.querySelector('.close-btn').addEventListener('touchend', (e) => {
+        e.stopPropagation();
+        noteContent.style.display = 'none';
+      });
+      
+      document.body.appendChild(noteContent);
+      notesContainer.appendChild(noteEl);
+      
+      // Add sparkle effects to notes
+      for (let i = 0; i < 2; i++) {
+        const sparkle = document.createElement('div');
+        sparkle.className = 'sparkle';
+        sparkle.style.left = Math.random() * 100 + '%';
+        sparkle.style.top = Math.random() * 100 + '%';
+        sparkle.style.animationDelay = Math.random() * 2 + 's';
+        noteEl.appendChild(sparkle);
+      }
+    });
+    
+    // Add some random sparkles to the jar
+    for (let i = 0; i < 15; i++) {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'sparkle';
+      sparkle.style.position = 'absolute';
+      sparkle.style.left = Math.random() * 100 + '%';
+      sparkle.style.top = Math.random() * 100 + '%';
+      sparkle.style.animationDelay = Math.random() * 3 + 's';
+      body.appendChild(sparkle);
+    }
+    
+    // Prevent background scrolling when note is open
+    document.addEventListener('touchmove', function(e) {
+      if (document.querySelector('.note-content[style*="display: flex"]')) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  </script>
+</body>
+</html>
